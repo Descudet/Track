@@ -85,17 +85,17 @@ export function RatingSheet({
   };
 
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange}>
+    <Drawer.Root open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <Drawer.Portal>
         {/* Backdrop overlay with blur */}
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md transition-opacity" />
 
         {/* Bottom Drawer Content */}
-        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 flex max-h-[92dvh] flex-col rounded-t-[32px] bg-[#121217] border-t border-white/[0.12] pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] focus:outline-none">
+        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 flex max-h-[88vh] flex-col rounded-t-[32px] bg-[#121217] border-t border-white/[0.12] pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] focus:outline-none">
           {/* iOS Grab Handle */}
-          <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-white/20" />
+          <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-white/20 shrink-0" />
 
-          <div className="overflow-y-auto px-6 pt-4 pb-2">
+          <div className="overflow-y-auto px-6 pt-4 pb-4 overscroll-contain">
             {/* Header with Title and Thumbnail */}
             <div className="flex items-center gap-4 border-b border-white/[0.08] pb-4">
               <div className="relative aspect-[2/3] w-14 shrink-0 overflow-hidden rounded-xl bg-black/40 border border-white/10 shadow-md">
@@ -193,18 +193,25 @@ export function RatingSheet({
               </button>
             </div>
 
-            {/* Personal Private Review */}
-            <div className="mb-5">
+            {/* Personal Review */}
+            <div className="mb-5" data-vaul-no-drag>
               <label
                 htmlFor="personal-review"
                 className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50"
               >
-                Critique personnelle (privée)
+                Votre critique & avis
               </label>
               <textarea
                 id="personal-review"
+                data-vaul-no-drag
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
+                onFocus={(e) => {
+                  const target = e.currentTarget;
+                  setTimeout(() => {
+                    target.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }, 250);
+                }}
                 placeholder="Pourquoi avez-vous aimé ou non cette œuvre ? Vos scènes préférées, ressenti..."
                 rows={3}
                 className="w-full rounded-2xl bg-white/[0.04] border border-white/[0.1] p-3 text-sm text-white placeholder-white/30 focus:border-[#E50914]/50 focus:outline-none focus:ring-1 focus:ring-[#E50914]/50 resize-none"

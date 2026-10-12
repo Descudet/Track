@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db, ensureDbInitialized } from "./index";
-import { mediaItems, userMedia, episodeProgress, watchLogs } from "./schema";
+import { mediaItems, userMedia, episodeProgress, watchLogs, users } from "./schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type { WatchStatus } from "@/types/cinema";
 import { searchMovieExact, getMediaLogo, getRecommendations, getTopRated, fetchTMDB } from "@/lib/tmdb/client";
@@ -377,9 +377,64 @@ export async function getMediaUserStatusAction(tmdbId: number, mediaType: "movie
     userRating: row.userRating ?? undefined,
     userReview: row.userReview ?? "",
     isFavorite: Boolean(row.isFavorite),
-    rewatchCount: row.rewatchCount,
   };
 }
+
+export interface MediaReviewItem {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string | null;
+  rating?: number | null;
+  review: string;
+  isFavorite: boolean;
+  updatedAt: number;
+  isCurrentUser: boolean;
+}
+
+/**
+ * Get all reviews written by users for a specific media item
+ */
+export async function getMediaReviewsAction(
+  tmdbId: number,
+  mediaType: "movie" | "tv"
+): Promise<MediaReviewItem[]> {
+  await ensureDbInitialized();
+  const currentUserId = await getCurrentUserId().catch(() => null);
+  const mediaItemId = `${mediaType}_${tmdbId}`;
+
+  const rows = await db
+    .select({
+      id: userMedia.id,
+      userId: userMedia.userId,
+      userRating: userMedia.userRating,
+      userReview: userMedia.userReview,
+      isFavorite: userMedia.isFavorite,
+      updatedAt: userMedia.updatedAt,
+      displayName: users.displayName,
+      avatarUrl: users.avatarUrl,
+    })
+    .from(userMedia)
+    .leftJoin(users, eq(userMedia.userId, users.id))
+    .where(eq(userMedia.mediaItemId, mediaItemId))
+    .orderBy(desc(userMedia.updatedAt))
+    .all();
+
+  return rows
+    .filter((r) => typeof r.userReview === "string" && r.userReview.trim().length > 0)
+    .map((r) => ({
+      id: r.id,
+      userId: r.userId,
+      userName: r.displayName || "Cinéphile Track",
+      userAvatar: r.avatarUrl,
+      rating: r.userRating,
+      review: r.userReview!.trim(),
+      isFavorite: Boolean(r.isFavorite),
+      updatedAt: r.updatedAt,
+      isCurrentUser: currentUserId === r.userId,
+    }));
+}
+
 
 /**
  * Toggle episode watched status

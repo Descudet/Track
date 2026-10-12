@@ -13,6 +13,7 @@ import {
   Search,
   Filter,
   Dices,
+  ArrowUpDown,
 } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { PosterCard } from "@/components/ui/PosterCard";
@@ -26,6 +27,15 @@ import {
   getUserLibraryAction,
 } from "@/lib/db/actions";
 import type { WatchStatus } from "@/types/cinema";
+
+export type LibrarySortOption =
+  | "recent"
+  | "rating_desc"
+  | "rating_asc"
+  | "year_desc"
+  | "year_asc"
+  | "title_asc"
+  | "title_desc";
 
 export interface LibraryItem {
   id: number;
@@ -51,6 +61,7 @@ export function LibraryClient({ initialLibrary }: LibraryClientProps) {
     "all" | "completed" | "watchlist" | "watching" | "favorites"
   >("all");
   const [mediaTypeFilter, setMediaTypeFilter] = useState<"all" | "movie" | "tv">("all");
+  const [sortBy, setSortBy] = useState<LibrarySortOption>("recent");
 
   // Keep library state in sync with server props
   React.useEffect(() => {
@@ -107,6 +118,36 @@ export function LibraryClient({ initialLibrary }: LibraryClientProps) {
     if (statusFilter === "favorites") return item.isFavorite;
 
     return true;
+  });
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (sortBy === "rating_desc") {
+      const rA = a.userRating ?? -1;
+      const rB = b.userRating ?? -1;
+      return rB - rA;
+    }
+    if (sortBy === "rating_asc") {
+      const rA = a.userRating ?? 999;
+      const rB = b.userRating ?? 999;
+      return rA - rB;
+    }
+    if (sortBy === "year_desc") {
+      const yA = parseInt(a.year) || 0;
+      const yB = parseInt(b.year) || 0;
+      return yB - yA;
+    }
+    if (sortBy === "year_asc") {
+      const yA = parseInt(a.year) || 9999;
+      const yB = parseInt(b.year) || 9999;
+      return yA - yB;
+    }
+    if (sortBy === "title_asc") {
+      return a.title.localeCompare(b.title, "fr", { sensitivity: "base" });
+    }
+    if (sortBy === "title_desc") {
+      return b.title.localeCompare(a.title, "fr", { sensitivity: "base" });
+    }
+    return 0;
   });
 
   const handleOpenRating = (item: LibraryItem) => {
@@ -259,47 +300,80 @@ export function LibraryClient({ initialLibrary }: LibraryClientProps) {
           />
         </div>
 
-        {/* Media Type Sub-Filter */}
-        <div className="mb-6 flex gap-2 overflow-x-auto no-scrollbar">
-          <button
-            type="button"
-            onClick={() => setMediaTypeFilter("all")}
-            className={`rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
-              mediaTypeFilter === "all"
-                ? "bg-white text-black border-white"
-                : "bg-white/[0.04] text-[#8e8e93] border-white/[0.08] hover:text-white"
-            }`}
-          >
-            Tous les formats
-          </button>
-          <button
-            type="button"
-            onClick={() => setMediaTypeFilter("movie")}
-            className={`rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
-              mediaTypeFilter === "movie"
-                ? "bg-[#E50914] text-white border-[#E50914] shadow-sm shadow-[#E50914]/30"
-                : "bg-white/[0.04] text-[#8e8e93] border-white/[0.08] hover:text-white"
-            }`}
-          >
-            Films ({library.filter((i) => i.mediaType === "movie").length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setMediaTypeFilter("tv")}
-            className={`rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
-              mediaTypeFilter === "tv"
-                ? "bg-[#0a84ff] text-white border-[#0a84ff]"
-                : "bg-white/[0.04] text-[#8e8e93] border-white/[0.08] hover:text-white"
-            }`}
-          >
-            Séries ({library.filter((i) => i.mediaType === "tv").length})
-          </button>
+        {/* Media Type Sub-Filter & Sorting */}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("selection");
+                setMediaTypeFilter("all");
+              }}
+              className={`rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
+                mediaTypeFilter === "all"
+                  ? "bg-white text-black border-white"
+                  : "bg-white/[0.04] text-[#8e8e93] border-white/[0.08] hover:text-white"
+              }`}
+            >
+              Tous
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("selection");
+                setMediaTypeFilter("movie");
+              }}
+              className={`rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
+                mediaTypeFilter === "movie"
+                  ? "bg-[#E50914] text-white border-[#E50914] shadow-sm shadow-[#E50914]/30"
+                  : "bg-white/[0.04] text-[#8e8e93] border-white/[0.08] hover:text-white"
+              }`}
+            >
+              Films ({library.filter((i) => i.mediaType === "movie").length})
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("selection");
+                setMediaTypeFilter("tv");
+              }}
+              className={`rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
+                mediaTypeFilter === "tv"
+                  ? "bg-[#0a84ff] text-white border-[#0a84ff]"
+                  : "bg-white/[0.04] text-[#8e8e93] border-white/[0.08] hover:text-white"
+              }`}
+            >
+              Séries ({library.filter((i) => i.mediaType === "tv").length})
+            </button>
+          </div>
+
+          {/* Sort Selector Dropdown */}
+          <div className="flex items-center gap-1.5 rounded-full bg-white/[0.06] border border-white/[0.1] px-2.5 py-1 text-xs font-medium text-white/90 hover:bg-white/[0.1] transition-colors ml-auto">
+            <ArrowUpDown className="h-3 w-3 text-[#E50914] shrink-0" />
+            <select
+              aria-label="Trier par"
+              value={sortBy}
+              onChange={(e) => {
+                triggerHaptic("selection");
+                setSortBy(e.target.value as LibrarySortOption);
+              }}
+              className="bg-transparent text-xs font-medium text-white/90 focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="recent" className="bg-[#141419] text-white">Ajout récent</option>
+              <option value="rating_desc" className="bg-[#141419] text-white">Note : la plus haute</option>
+              <option value="rating_asc" className="bg-[#141419] text-white">Note : la plus basse</option>
+              <option value="year_desc" className="bg-[#141419] text-white">Année : la plus récente</option>
+              <option value="year_asc" className="bg-[#141419] text-white">Année : la plus ancienne</option>
+              <option value="title_asc" className="bg-[#141419] text-white">Titre : A à Z</option>
+              <option value="title_desc" className="bg-[#141419] text-white">Titre : Z à A</option>
+            </select>
+          </div>
         </div>
 
         {/* Poster Grid */}
-        {filteredItems.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-4">
-            {filteredItems.map((item) => (
+        {sortedItems.length > 0 ? (
+          <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+            {sortedItems.map((item) => (
               <PosterCard
                 key={`${item.mediaType}-${item.id}`}
                 id={item.id}

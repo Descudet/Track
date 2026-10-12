@@ -53,25 +53,25 @@ export function PosterCard({
   const cardContent = (
     <>
       {/* 2:3 Cinema Poster Container */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl bg-[#141419] border border-white/[0.08] shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl sm:rounded-2xl bg-[#141419] border border-white/[0.08] shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt={title}
             fill
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 200px"
+            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 200px"
             priority={priority}
             onError={() => setHasError(true)}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center p-3 text-center bg-gradient-to-br from-[#1a1a24] to-[#0e0e13]">
-            <Film className="h-6 w-6 text-white/30 mb-2" />
-            <span className="text-xs font-semibold text-white/80 line-clamp-3 leading-tight">
+          <div className="flex h-full w-full flex-col items-center justify-center p-2 text-center bg-gradient-to-br from-[#1a1a24] to-[#0e0e13]">
+            <Film className="h-5 w-5 text-white/30 mb-1.5" />
+            <span className="text-[11px] sm:text-xs font-semibold text-white/80 line-clamp-2 leading-tight">
               {title}
             </span>
             {year && (
-              <span className="mt-1 text-[10px] text-[#8e8e93] font-medium">
+              <span className="mt-0.5 text-[9px] sm:text-[10px] text-[#8e8e93] font-medium">
                 {year}
               </span>
             )}
@@ -82,19 +82,19 @@ export function PosterCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
         {/* Top Badges */}
-        <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+        <div className="absolute top-1.5 left-1.5 right-1.5 sm:top-2 sm:left-2 sm:right-2 flex items-center justify-between pointer-events-none">
           {/* User Rating Badge (Gold) or TMDB Rating */}
           {userRating !== undefined ? (
-            <div className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 backdrop-blur-md border border-[#f5c518]/30 shadow-sm">
-              <Star className="h-3 w-3 fill-[#f5c518] text-[#f5c518]" />
-              <span className="text-[11px] font-semibold text-[#f5c518]">
+            <div className="flex items-center gap-0.5 sm:gap-1 rounded-full bg-black/60 px-1.5 sm:px-2 py-0.5 backdrop-blur-md border border-[#f5c518]/30 shadow-sm">
+              <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-[#f5c518] text-[#f5c518]" />
+              <span className="text-[10px] sm:text-[11px] font-semibold text-[#f5c518]">
                 {userRating.toFixed(1)}
               </span>
             </div>
           ) : rating !== undefined && rating > 0 ? (
-            <div className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 backdrop-blur-md border border-white/10">
-              <Star className="h-3 w-3 fill-white/80 text-white/80" />
-              <span className="text-[11px] font-medium text-white/90">
+            <div className="flex items-center gap-0.5 sm:gap-1 rounded-full bg-black/60 px-1.5 sm:px-2 py-0.5 backdrop-blur-md border border-white/10">
+              <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-white/80 text-white/80" />
+              <span className="text-[10px] sm:text-[11px] font-medium text-white/90">
                 {rating.toFixed(1)}
               </span>
             </div>
@@ -104,27 +104,27 @@ export function PosterCard({
 
           {/* Favorite Heart Badge */}
           {isFavorite && (
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-[#ff3b30]/40">
-              <Heart className="h-3.5 w-3.5 fill-[#ff3b30] text-[#ff3b30]" />
+            <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-[#ff3b30]/40">
+              <Heart className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-[#ff3b30] text-[#ff3b30]" />
             </div>
           )}
         </div>
 
         {/* Bottom Status Pill */}
         {status && (
-          <div className="absolute bottom-2 left-2">
+          <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2">
             {status === "completed" && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-[#30d158]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#30d158] backdrop-blur-md border border-[#30d158]/30">
-                <Check className="h-2.5 w-2.5" /> Vu
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#30d158]/20 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-[#30d158] backdrop-blur-md border border-[#30d158]/30">
+                <Check className="h-2 w-2 sm:h-2.5 sm:w-2.5" /> Vu
               </span>
             )}
             {status === "watchlist" && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-[#0a84ff]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#0a84ff] backdrop-blur-md border border-[#0a84ff]/30">
-                <Bookmark className="h-2.5 w-2.5" /> À voir
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#0a84ff]/20 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-[#0a84ff] backdrop-blur-md border border-[#0a84ff]/30">
+                <Bookmark className="h-2 w-2 sm:h-2.5 sm:w-2.5" /> À voir
               </span>
             )}
             {status === "watching" && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-[#E50914]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#E50914] backdrop-blur-md border border-[#E50914]/30">
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#E50914]/20 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-[#E50914] backdrop-blur-md border border-[#E50914]/30">
                 En cours
               </span>
             )}
@@ -133,12 +133,12 @@ export function PosterCard({
       </div>
 
       {/* Title & Year Metadata */}
-      <div className="mt-2 flex flex-col px-0.5">
-        <h4 className="line-clamp-1 text-sm font-semibold text-white/90 group-hover:text-white">
+      <div className="mt-1.5 sm:mt-2 flex flex-col px-0.5">
+        <h4 className="line-clamp-1 text-xs sm:text-sm font-semibold text-white/90 group-hover:text-white">
           {title}
         </h4>
         {year && (
-          <span className="text-xs font-medium text-[#8e8e93]">
+          <span className="text-[10px] sm:text-xs font-medium text-[#8e8e93]">
             {year}
           </span>
         )}

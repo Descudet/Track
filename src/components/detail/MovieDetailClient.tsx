@@ -32,6 +32,8 @@ import {
   toggleFavoriteAction,
   getMediaUserStatusAction,
   removeMediaFromLibraryAction,
+  getMediaReviewsAction,
+  type MediaReviewItem,
 } from "@/lib/db/actions";
 import type { TMDBMovieRaw } from "@/types/tmdb";
 import type { WatchStatus } from "@/types/cinema";
@@ -53,6 +55,7 @@ export function MovieDetailClient({
   const [userReview, setUserReview] = useState<string>("");
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [rewatchCount, setRewatchCount] = useState<number>(0);
+  const [reviews, setReviews] = useState<MediaReviewItem[]>([]);
 
   // Modals state
   const [isRatingOpen, setIsRatingOpen] = useState(false);
@@ -69,6 +72,8 @@ export function MovieDetailClient({
       if (saved.isFavorite) setIsFavorite(saved.isFavorite);
       if (saved.rewatchCount) setRewatchCount(saved.rewatchCount);
     });
+
+    getMediaReviewsAction(movie.id, "movie").then(setReviews);
   }, [movie.id]);
 
   const year = movie.release_date ? movie.release_date.split("-")[0] : "";
@@ -577,6 +582,109 @@ export function MovieDetailClient({
           </section>
         ) : null}
 
+        {/* User Reviews Section */}
+        <section className="mt-8 border-t border-white/[0.08] pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#8e8e93]">
+                Avis & Critiques
+              </h3>
+              {reviews.length > 0 && (
+                <span className="rounded-full bg-[#E50914]/20 px-2 py-0.5 text-[11px] font-bold text-[#E50914] border border-[#E50914]/30">
+                  {reviews.length}
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("selection");
+                setIsRatingOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/[0.14] transition-colors border border-white/[0.1] active:scale-95 cursor-pointer"
+            >
+              {userReview ? "Modifier mon avis" : "Rédiger un avis"}
+            </button>
+          </div>
+
+          {reviews.length > 0 ? (
+            <div className="space-y-3">
+              {reviews.map((rev) => (
+                <div
+                  key={rev.id}
+                  className={`rounded-2xl p-4 border transition-all ${
+                    rev.isCurrentUser
+                      ? "bg-[#E50914]/[0.06] border-[#E50914]/30"
+                      : "bg-white/[0.03] border-white/[0.08]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#E50914] to-[#831010] text-xs font-bold text-white shadow-sm shrink-0">
+                        {rev.userName.slice(0, 1).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-white">
+                            {rev.userName}
+                          </span>
+                          {rev.isCurrentUser && (
+                            <span className="rounded bg-[#E50914] px-1.5 py-0.5 text-[9px] font-black uppercase text-white">
+                              Vous
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-[#8e8e93]">
+                          {new Date(rev.updatedAt).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {rev.rating !== null && rev.rating !== undefined && (
+                        <div className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 border border-[#f5c518]/30">
+                          <Star className="h-3 w-3 fill-[#f5c518] text-[#f5c518]" />
+                          <span className="text-xs font-semibold text-[#f5c518]">
+                            {rev.rating.toFixed(1)}
+                          </span>
+                        </div>
+                      )}
+                      {rev.isFavorite && (
+                        <Heart className="h-3.5 w-3.5 fill-[#ff3b30] text-[#ff3b30]" />
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-white/90 leading-relaxed whitespace-pre-line pl-10">
+                    {rev.review}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-white/[0.02] border border-dashed border-white/[0.1] p-6 text-center">
+              <p className="text-xs text-[#8e8e93] mb-3">
+                Aucun avis rédigé pour le moment sur ce film.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("selection");
+                  setIsRatingOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#E50914] px-4 py-2 text-xs font-bold text-white shadow-md shadow-[#E50914]/20 hover:bg-[#b81d24] transition-colors active:scale-95 cursor-pointer"
+              >
+                Partager votre avis en premier
+              </button>
+            </div>
+          )}
+        </section>
+
         {/* Similar / Recommended Movies */}
         {similarMovies.length > 0 && (
           <section className="mt-8">
@@ -615,7 +723,11 @@ export function MovieDetailClient({
         initialRewatchCount={rewatchCount}
         onDeleteRating={() => {
           setUserRating(undefined);
-          removeUserRatingAction(mediaPayload).then(() => router.refresh());
+          setUserReview("");
+          removeUserRatingAction(mediaPayload).then(() => {
+            getMediaReviewsAction(movie.id, "movie").then(setReviews);
+            router.refresh();
+          });
         }}
         onSave={(data) => {
           const finalRating = data.rating && data.rating > 0 ? data.rating : undefined;
@@ -630,7 +742,10 @@ export function MovieDetailClient({
             isFavorite: data.isFavorite,
             rewatchCount: data.rewatchCount,
             status: "completed",
-          }).then(() => router.refresh());
+          }).then(() => {
+            getMediaReviewsAction(movie.id, "movie").then(setReviews);
+            router.refresh();
+          });
         }}
       />
 
